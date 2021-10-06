@@ -7,7 +7,7 @@ import numpy as np
 ########################################################################################################################
 # Dados simulação
 tsim = 50  # Tempo da simulação em segundos
-Tc = 0.1  # Tempo de amostragem
+Tc = 0.1 # Tempo de amostragem
 ciclos = int(tsim / Tc)  # Ciclos nescessarios para completar simulação em x segundos
 print('ciclos nescessarios para a simulação: ', ciclos)
 
@@ -121,7 +121,7 @@ qpontoref = np.zeros((ciclos, 6))
 # Configuração da simulação
 # 1 - circulo
 # 2 - oito deitado
-simulacao = 2
+simulacao = 1
 if simulacao == 1:
     kx = ky = kz = 7  # constante proporcional para x e y
     kpsi = 7  # constante proporcional para psi
@@ -173,8 +173,8 @@ if simulacao == 2:
     for j in range(0, ciclos, 1):
         # xdesponto[j] = -3 * sin(Tc * j)
         # ydesponto[j] = 3 * cos(Tc * j)
-        xdesponto[j] = - 15 * sin(3 * j * Tc)
-        ydesponto[j] = 15 * cos(3 * j * Tc)
+        xdesponto[j] = - 15  * sin(3 * j * Tc)
+        ydesponto[j] = 15  * cos(3 * j * Tc)
         zdesponto[j] = 0
         rodesponto[j] = 0
         alfadesponto[j] = 0
