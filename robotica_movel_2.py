@@ -1,13 +1,12 @@
 # Dayvson Silva
-from math import pi, cos, sin, sqrt, atan, atan2, tanh, tan
+from math import pi, cos, sin, sqrt, atan, tanh
 import matplotlib.pyplot as plt
 import numpy as np
 
 ########################################################################################################################
-
 # Dados simulação
-tsim = 25  # Tempo da simulação em segundos
-Tc = 0.2  # Tempo de amostragem
+tsim = 50  # Tempo da simulação em segundos
+Tc = 0.1  # Tempo de amostragem
 ciclos = int(tsim / Tc)  # Ciclos nescessarios para completar simulação em x segundos
 print('ciclos nescessarios para a simulação: ', ciclos)
 
@@ -121,7 +120,7 @@ qpontoref = np.zeros((ciclos, 6))
 # Configuração da simulação
 # 1 - circulo
 # 2 - oito deitado
-simulacao = 1
+simulacao = 2
 if simulacao == 1:
     kx = ky = kz = 7  # constante proporcional para x e y
     kpsi = 7  # constante proporcional para psi
@@ -160,10 +159,10 @@ if simulacao == 2:
     for j in range(0, ciclos, 1):
         # xdes[j] = 3 * cos(Tc * j)
         # yd[j] = 3 * sin(Tc * j)
-        xdes[j] = 3 * cos(Tc * j)
-        ydes[j] = 3 * sin(Tc * j)
-        # xdes[j] = 3 + 5 * cos(3 * j * Tc)
-        # ydes[j] = 5 + 5 * sin(3 * j * Tc)
+        # xdes[j] = 3 * cos(Tc * j)
+        # ydes[j] = 3 * sin(Tc * j)
+        xdes[j] = 3 + 5 * cos(3 * j * Tc)
+        ydes[j] = 5 + 5 * sin(3 * j * Tc)
         zdes[j] = 20
         rodes[j] = 5
         alfades[j] = 0
@@ -171,10 +170,10 @@ if simulacao == 2:
         qdes[j] = np.array([xdes[j], ydes[j], zdes[j], rof[j], alfaf[j], betaf[j]])
     # Derivada das trajetórias de interesse
     for j in range(0, ciclos, 1):
-        xdesponto[j] = -3 * sin(Tc * j)
-        ydesponto[j] = 3 * cos(Tc * j)
-        # xdesponto[j] = - 15  * sin(3 * j * Tc)
-        # ydesponto[j] = 15 * cos(3 * j * Tc)
+        # xdesponto[j] = -3 * sin(Tc * j)
+        # ydesponto[j] = 3 * cos(Tc * j)
+        xdesponto[j] = - 15 * sin(3 * j * Tc)
+        ydesponto[j] = 15 * cos(3 * j * Tc)
         zdesponto[j] = 0
         rodesponto[j] = 0
         alfadesponto[j] = 0
@@ -198,7 +197,6 @@ k7 = 9.8524
 k8 = 4.7295
 
 # Dados do robô no ponto inicial
-
 # Posição inicial do VANT 1
 x1[1] = 0
 y1[1] = 0
@@ -238,14 +236,14 @@ for k in range(1, ciclos, 1):
     xtil[k] = (xdes[k] - xf[k])
     ytil[k] = (ydes[k] - yf[k])
     ztil[k] = (zdes[k] - zf[k])
-    # rotil[k] = (rodes[k] - rof[k])
-    # alfatil[k] = (alfades[k] - alfaf[k])
-    # betatil[k] = (betades[k] - betaf[k])
+    rotil[k] = (rodes[k] - rof[k])
+    alfatil[k] = (alfades[k] - alfaf[k])
+    betatil[k] = (betades[k] - betaf[k])
 
     qtil = np.array([xtil[k], ytil[k], ztil[k], rotil[k], alfatil[k], betatil[k]]).T
 
-    L1 = np.diag([0.5, 0.5, 1, 0.5, 0.5, 0.5])
-    L2 = np.diag([1, 1, 1, 1, 1, 1])
+    L1 = np.diag([0.5, 0.5, 1, 0.5, 0.5, 0.5])  # Kp
+    L2 = np.diag([1, 1, 1, 1, 1, 1])  # kd
 
     parcial1 = np.dot(L2, qtil)
     # vector = np.vectorize(float)
@@ -300,17 +298,7 @@ for k in range(1, ciclos, 1):
                      [0, 0, 0, 0, 0, 0, 0, 1]])
 
     Vref = np.dot(kinv, xpontoref)
-    ####################################################################################################################
 
-    Ae1 = np.array([[k1 * cos(psi1[k]), -k3 * sin(psi1[k]), 0, 0],
-                    [k1 * sin(psi1[k]), +k3 * cos(psi1[k]), 0, 0],
-                    [0, 0, k5, 0],
-                    [0, 0, 0, k7]])
-
-    Ae2 = np.array([[k1 * cos(psi2[k]), -k3 * sin(psi2[k]), 0, 0],
-                    [k1 * sin(psi2[k]), +k3 * cos(psi2[k]), 0, 0],
-                    [0, 0, k5, 0],
-                    [0, 0, 0, k7]])
     ####################################################################################################################
 
     vxref1[k] = Vref[0]
@@ -325,22 +313,26 @@ for k in range(1, ciclos, 1):
 
     ####################################################################################################################
     # Cinematica do Drone 1
-    # inputs U, W
-    # outputs x, y ,psi
+    # inputs vxref, vyref1, vzref1, vpsi1
+    # outputs x, y, z, psi
     # Calcular Xr, Yr e Psir (Ponto de controle)
     mie1 = np.array([vxref1[k], vyref1[k], vzref1[k], vpsi1[k]])
 
+    # Ae1 = np.array([[k1 * cos(psi1[k]), -k3 * sin(psi1[k]), 0, 0],
+    #                 [k1 * sin(psi1[k]), +k3 * cos(psi1[k]), 0, 0],
+    #                 [0, 0, k5, 0],
+    #                 [0, 0, 0, k7]])
+    Ae1 = np.array([[cos(psi1[k]), sin(psi1[k]), 0, 0],
+                    [sin(psi1[k]), cos(psi1[k]), 0, 0],
+                    [0, 0, 1, 0],
+                    [0, 0, 0, 1]])
+
     px1 = np.dot(Ae1, mie1)
 
-    xponto1[k] = Vref[0] * cos(psi1[k]) - Vref[1] * sin(psi1[k])  # Saida xponto
-    yponto1[k] = Vref[0] * sin(psi1[k]) + Vref[1] * cos(psi1[k])  # Saida yponto
-    zponto1[k] = Vref[2]  # Saida yponto
-    psiponto1[k] = Vref[3]  # Saida psip
-
-    # xponto1[k] = px1[0]  # Saida xponto
-    # yponto1[k] = px1[1]  # Saida yponto
-    # zponto1[k] = px1[2]  # Saida yponto
-    # psiponto1[k] = px1[3]  # Saida psip
+    xponto1[k] = px1[0]  # Saida xponto
+    yponto1[k] = px1[1]  # Saida yponto
+    zponto1[k] = px1[2]  # Saida yponto
+    psiponto1[k] = px1[3]  # Saida psip
 
     if k < ciclos - 1:
         x1[k + 1] = Tc * xponto1[k] + x1[k]  # x deve ser x
@@ -350,31 +342,32 @@ for k in range(1, ciclos, 1):
 
     ####################################################################################################################
     # Cinematica do Drone 2
-    # inputs U, W
-    # outputs x, y ,psi
+    # inputs vxref, vyref, vzref, vpsi
+    # outputs x, y, z, psi
     # Calcular Xr, Yr e Psir (Ponto de controle)
     mie2 = np.array([vxref2[k], vyref2[k], vzref2[k], vpsi2[k]])
 
+    Ae2 = np.array([[cos(psi1[k]), sin(psi1[k]), 0, 0],
+                    [sin(psi1[k]), cos(psi1[k]), 0, 0],
+                    [0, 0, 1, 0],
+                    [0, 0, 0, 1]])
+
     px2 = np.dot(Ae2, mie2)
 
-    xponto2[k] = Vref[4] * cos(psi1[k]) - Vref[5] * sin(psi1[k])  # Saida xponto
-    yponto2[k] = Vref[4] * sin(psi1[k]) + Vref[5] * cos(psi1[k])  # Saida yponto
-    zponto2[k] = Vref[6]  # Saida yponto
-    psiponto2[k] = Vref[7]  # Saida psip
-
-    # xponto2[k] = px2[0]  # Saida xponto
-    # yponto2[k] = px2[1]  # Saida yponto
-    # zponto2[k] = px2[2]  # Saida yponto
-    # psiponto2[k] = px2[3]  # Saida psip
+    xponto2[k] = px2[0]  # Saida xponto
+    yponto2[k] = px2[1]  # Saida yponto
+    zponto2[k] = px2[2]  # Saida yponto
+    psiponto2[k] = px2[3]  # Saida psip
 
     if k < ciclos - 1:
         x2[k + 1] = Tc * xponto2[k] + x2[k]  # x deve ser x
         y2[k + 1] = Tc * yponto2[k] + y2[k]
         z2[k + 1] = Tc * zponto2[k] + z2[k]
         psi2[k + 1] = Tc * psiponto2[k] + psi2[k]  # Saida p
+
     ####################################################################################################################
     # Preparação dos dados para plotar
-    erro[k] = sqrt((xtil[k]) ** 2 + (ytil[k]) ** 2)
+    erro[k] = sqrt((xtil[k]) ** 2 + (ytil[k]) ** 2 + (ztil[k]) ** 2)
     plt.axis('auto')
     ####################################################################################################################
 
@@ -395,8 +388,10 @@ for k in range(1, ciclos, 1):
     ax.set_xlabel('X Label')
     ax.set_ylabel('Y Label')
     ax.set_zlabel('Z Label')
+    ax.legend(loc='best')
+
     # ax.view_init(elev=-75,azim=-90)
-    plt.pause(0.11)
+    plt.pause(0.01)
 ###################################
 
 
@@ -432,10 +427,6 @@ axs[2].grid()
 
 plt.tight_layout()
 
-vxref1[k] = Vref[0]
-vyref1[k] = Vref[1]
-vzref1[k] = Vref[2]
-vpsi1[k] = Vref[3]
 # Velocidade comandada - Ucref, Wcref
 # Velocidade real  - U, W
 fig3, axs = plt.subplots(4, 1, num='Velocidade do robô no tempo')
@@ -473,32 +464,79 @@ axs[3].grid()
 
 plt.tight_layout()
 
+# Pose do robô - x, y, psi
+fig4, axs = plt.subplots(4, 1, num='Posição do robô no tempo')
+axs[0].plot(x1, label="posição x do Vant1")
+axs[0].plot(x2, label="posição x do Vant2")
+axs[0].set_title('posição x do robô no tempo')
+axs[0].set(ylabel='y[m]')
+axs[0].legend(loc='best')
+axs[0].grid()
 
-# # Pose do robô - x, y, psi
-# fig4, axs = plt.subplots(3, 1, num='Posição do robô no tempo')
-# axs[0].plot(x)
+axs[1].plot(y1, label="posição y do Vant1")
+axs[1].plot(y2, label="posição y do Vant2")
+axs[1].set_title('posição y do robô no tempo')
+axs[1].set(ylabel='y[m]')
+axs[1].legend(loc='best')
+axs[1].grid()
+
+axs[2].plot(z1, label="posição z do Vant1")
+axs[2].plot(z2, label="posição z do Vant2")
+axs[2].set_title('posição z do robô no tempo')
+axs[2].set(ylabel='y[m]')
+axs[2].legend(loc='best')
+axs[2].grid()
+
+axs[3].plot(psi1, label="Orientação do Vant1")
+axs[3].plot(psi2, label="Orientação do Vant2")
+axs[3].set_title('Angulo psi do robô no tempo')
+axs[3].set(xlabel='[Ciclos de 100 ms]', ylabel='radianos')
+axs[3].grid()
+axs[3].legend(loc='best')
+plt.tight_layout()
+
+# Erro de trajetoria - erro
+plt.figure('Erro de trajetória')
+plt.plot(erro, label="Erro de trajetória")
+plt.title('Erro de trajetória')
+plt.xlabel('[Ciclos de 100 ms]')
+plt.ylabel('[m]')
+plt.legend(loc='best')
+plt.grid(True)
+
+
+# q = np.array([xf[k], yf[k], zf[k], rof[k], alfaf[k], betaf[k]])
+#
+# # Dados da formação - xf, yf, zf, rof, alfaf, betaf
+# fig4, axs = plt.subplots(4, 1, num='Posição do robô no tempo')
+# axs[0].plot(xf, label="posição x do Vant1")
 # axs[0].set_title('posição x do robô no tempo')
 # axs[0].set(ylabel='y[m]')
+# axs[0].legend(loc='best')
 # axs[0].grid()
-# axs[1].plot(y)
+#
+# axs[1].plot(y1, label="posição y do Vant1")
+# axs[1].plot(y2, label="posição y do Vant2")
 # axs[1].set_title('posição y do robô no tempo')
 # axs[1].set(ylabel='y[m]')
+# axs[1].legend(loc='best')
 # axs[1].grid()
-# axs[2].plot(psi)
-# axs[2].set_title('Angulo psi do robô no tempo')
-# axs[2].set(xlabel='[Ciclos de 100 ms]', ylabel='radianos')
+#
+# axs[2].plot(z1, label="posição z do Vant1")
+# axs[2].plot(z2, label="posição z do Vant2")
+# axs[2].set_title('posição z do robô no tempo')
+# axs[2].set(ylabel='y[m]')
+# axs[2].legend(loc='best')
 # axs[2].grid()
+#
+# axs[3].plot(psi1, label="Orientação do Vant1")
+# axs[3].plot(psi2, label="Orientação do Vant2")
+# axs[3].set_title('Angulo psi do robô no tempo')
+# axs[3].set(xlabel='[Ciclos de 100 ms]', ylabel='radianos')
+# axs[3].grid()
+# axs[3].legend(loc='best')
 # plt.tight_layout()
 
-# # Erro de trajetoria - erro
-# plt.figure('Erro de trajetória')
-# plt.plot(erro, label="Erro de trajetória")
-# plt.title('Erro de trajetória')
-# plt.xlabel('[Ciclos de 100 ms]')
-# plt.ylabel('[m]')
-# plt.legend(loc='best')
-# plt.grid(True)
-#
 # # Rascunho
 # fig6, axs = plt.subplots(4, 1, num='RASCUNHO ')
 # plt.tight_layout()
