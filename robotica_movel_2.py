@@ -1,4 +1,5 @@
 # Dayvson Silva
+# 06/10/2021
 from math import pi, cos, sin, sqrt, atan, tanh
 import matplotlib.pyplot as plt
 import numpy as np
@@ -503,7 +504,6 @@ plt.xlabel('[Ciclos de 100 ms]')
 plt.ylabel('[m]')
 plt.legend(loc='best')
 plt.grid(True)
-
 
 # q = np.array([xf[k], yf[k], zf[k], rof[k], alfaf[k], betaf[k]])
 #
