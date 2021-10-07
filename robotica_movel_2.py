@@ -7,27 +7,27 @@ import numpy as np
 ########################################################################################################################
 # Dados simulação
 tsim = 50  # Tempo da simulação em segundos
-Tc = 0.1 # Tempo de amostragem
+Tc = 0.1  # Tempo de amostragem
 ciclos = int(tsim / Tc)  # Ciclos nescessarios para completar simulação em x segundos
 print('ciclos nescessarios para a simulação: ', ciclos)
 
 # Definição de variaveis
-x = np.zeros(ciclos, dtype=float)  # xdes deve ser Xdponto    / // x deve ser x # x deve ser XD /
+x = np.zeros(ciclos, dtype=float)
 y = np.zeros(ciclos, dtype=float)
 z = np.zeros(ciclos, dtype=float)
 psi = np.zeros(ciclos, dtype=float)
 
-xf = np.zeros(ciclos, dtype=float)  # xdes deve ser Xdponto    / // x deve ser x # x deve ser XD /
+xf = np.zeros(ciclos, dtype=float)
 yf = np.zeros(ciclos, dtype=float)
 zf = np.zeros(ciclos, dtype=float)
 psif = np.zeros(ciclos, dtype=float)
 
-x1 = np.zeros(ciclos, dtype=float)  # xdes deve ser Xdponto    / // x deve ser x # x deve ser XD /
+x1 = np.zeros(ciclos, dtype=float)
 y1 = np.zeros(ciclos, dtype=float)
 z1 = np.zeros(ciclos, dtype=float)
 psi1 = np.zeros(ciclos, dtype=float)
 
-x2 = np.zeros(ciclos, dtype=float)  # xdes deve ser Xdponto    / // x deve ser x # x deve ser XD /
+x2 = np.zeros(ciclos, dtype=float)
 y2 = np.zeros(ciclos, dtype=float)
 z2 = np.zeros(ciclos, dtype=float)
 psi2 = np.zeros(ciclos, dtype=float)
@@ -111,8 +111,6 @@ qpontodes = np.zeros((ciclos, 6))
 qtil = np.zeros((ciclos, 6))
 q = np.zeros((ciclos, 6))
 qpontoref = np.zeros((ciclos, 6))
-# qtil = np.array([ciclos,6])
-# kinv = np.zeros((8,8))
 
 ########################################################################################################################
 # Camada de planejamento
@@ -173,8 +171,8 @@ if simulacao == 2:
     for j in range(0, ciclos, 1):
         # xdesponto[j] = -3 * sin(Tc * j)
         # ydesponto[j] = 3 * cos(Tc * j)
-        xdesponto[j] = - 15  * sin(3 * j * Tc)
-        ydesponto[j] = 15  * cos(3 * j * Tc)
+        xdesponto[j] = - 15 * sin(3 * j * Tc)
+        ydesponto[j] = 15 * cos(3 * j * Tc)
         zdesponto[j] = 0
         rodesponto[j] = 0
         alfadesponto[j] = 0
@@ -203,7 +201,7 @@ x1[1] = 0
 y1[1] = 0
 z1[1] = 0.75
 psi1[1] = 0
-# Posição inicial do VANT 1
+# Posição inicial do VANT 2
 x2[1] = -2
 y2[1] = 1
 z2[1] = 0.75
@@ -243,7 +241,7 @@ for k in range(1, ciclos, 1):
 
     qtil = np.array([xtil[k], ytil[k], ztil[k], rotil[k], alfatil[k], betatil[k]]).T
 
-    L1 = np.diag([0.5, 0.5, 1, 0.5, 0.5, 0.5])  # Kp
+    L1 = np.diag([3, 3, 3, 3, 3, 3])  # Kp
     L2 = np.diag([1, 1, 1, 1, 1, 1])  # kd
 
     parcial1 = np.dot(L2, qtil)
@@ -319,14 +317,14 @@ for k in range(1, ciclos, 1):
     # Calcular Xr, Yr e Psir (Ponto de controle)
     mie1 = np.array([vxref1[k], vyref1[k], vzref1[k], vpsi1[k]])
 
-    # Ae1 = np.array([[k1 * cos(psi1[k]), -k3 * sin(psi1[k]), 0, 0],
-    #                 [k1 * sin(psi1[k]), +k3 * cos(psi1[k]), 0, 0],
-    #                 [0, 0, k5, 0],
-    #                 [0, 0, 0, k7]])
-    Ae1 = np.array([[cos(psi1[k]), sin(psi1[k]), 0, 0],
-                    [sin(psi1[k]), cos(psi1[k]), 0, 0],
-                    [0, 0, 1, 0],
-                    [0, 0, 0, 1]])
+    Ae1 = np.array([[k1 * cos(psi1[k]), -k3 * sin(psi1[k]), 0, 0],
+                    [k1 * sin(psi1[k]), +k3 * cos(psi1[k]), 0, 0],
+                    [0, 0, k5, 0],
+                    [0, 0, 0, k7]])
+    # Ae1 = np.array([[cos(psi1[k]), sin(psi1[k]), 0, 0],
+    #                 [sin(psi1[k]), cos(psi1[k]), 0, 0],
+    #                 [0, 0, 1, 0],
+    #                 [0, 0, 0, 1]])
 
     px1 = np.dot(Ae1, mie1)
 
@@ -348,10 +346,15 @@ for k in range(1, ciclos, 1):
     # Calcular Xr, Yr e Psir (Ponto de controle)
     mie2 = np.array([vxref2[k], vyref2[k], vzref2[k], vpsi2[k]])
 
-    Ae2 = np.array([[cos(psi1[k]), sin(psi1[k]), 0, 0],
-                    [sin(psi1[k]), cos(psi1[k]), 0, 0],
-                    [0, 0, 1, 0],
-                    [0, 0, 0, 1]])
+    # Ae2 = np.array([[cos(psi1[k]), sin(psi1[k]), 0, 0],
+    #                 [sin(psi1[k]), cos(psi1[k]), 0, 0],
+    #                 [0, 0, 1, 0],
+    #                 [0, 0, 0, 1]])
+
+    Ae2 = np.array([[k1 * cos(psi1[k]), -k3 * sin(psi1[k]), 0, 0],
+                    [k1 * sin(psi1[k]), +k3 * cos(psi1[k]), 0, 0],
+                    [0, 0, k5, 0],
+                    [0, 0, 0, k7]])
 
     px2 = np.dot(Ae2, mie2)
 
@@ -379,10 +382,10 @@ for k in range(1, ciclos, 1):
     ax.plot(xdes[1:k], ydes[1:k], zdes[1:k], "-r", label="Trajetoria desejada")
     plt.plot(xdes[k], ydes[k], zdes[k], "xr")
 
-    ax.plot(x1[1:k], y1[1:k], z1[1:k], "-g", label="Trajetoria desejada Vant 1")
+    ax.plot(x1[1:k], y1[1:k], z1[1:k], "-g", label="Trajetoria Vant 1")
     plt.plot(x1[k], y1[k], z1[k], "xg")
 
-    ax.plot(x2[1:k], y2[1:k], z2[1:k], "-b", label="Trajetoria desejada Vant 2")
+    ax.plot(x2[1:k], y2[1:k], z2[1:k], "-b", label="Trajetoria Vant 2")
     plt.plot(x2[k], y2[k], z2[k], "xb")
 
     # ax.set_aspect('equal')
