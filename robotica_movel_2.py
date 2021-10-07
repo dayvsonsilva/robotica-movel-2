@@ -241,7 +241,7 @@ for k in range(1, ciclos, 1):
 
     qtil = np.array([xtil[k], ytil[k], ztil[k], rotil[k], alfatil[k], betatil[k]]).T
 
-    L1 = np.diag([3, 3, 3, 3, 3, 3])  # Kp
+    L1 = np.diag([3, 3, 1.9, 3, 3, 1.9])  # Kp
     L2 = np.diag([1, 1, 1, 1, 1, 1])  # kd
 
     parcial1 = np.dot(L2, qtil)
