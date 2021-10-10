@@ -119,10 +119,10 @@ Wcrefd = np.zeros(ciclos, dtype=float)
 Vcrefd = np.zeros(ciclos, dtype=float)
 
 qdes = np.zeros((ciclos, 6))
-qpontodes = np.zeros((ciclos, 6))
-qtil = np.zeros((ciclos, 6))
+# qpontodes = np.zeros((ciclos, 6))
+# qtil = np.zeros((ciclos, 6))
 q = np.zeros((ciclos, 6))
-qpontoref = np.zeros((ciclos, 6))
+# qpontoref = np.zeros((ciclos, 6))
 
 ########################################################################################################################
 # Camada de planejamento
@@ -131,7 +131,7 @@ qpontoref = np.zeros((ciclos, 6))
 # Configuração da simulação
 # 1 - circulo
 # 2 - oito deitado
-simulacao = 2
+simulacao = 1
 if simulacao == 1:
     kx = ky = kz = 7  # constante proporcional para x e y
     kpsi = 7  # constante proporcional para psi
@@ -146,7 +146,6 @@ if simulacao == 1:
         rodes[j] = 5
         alfades[j] = 0
         betades[j] = 0
-        qdes[j] = np.array([xdes[j], ydes[j], zdes[j], rodes[j], alfades[j], betades[j]])
 
     # Derivada das trajetórias de interesse
     for j in range(0, ciclos, 1):
@@ -158,9 +157,6 @@ if simulacao == 1:
         rodesponto[j] = 0
         alfadesponto[j] = 0
         betadesponto[j] = 0
-
-        qpontodes[j] = np.array(
-            [xdesponto[j], ydesponto[j], zdesponto[j], rodesponto[j], alfadesponto[j], betadesponto[j]])
 
 if simulacao == 2:
     kx = ky = kz = 7  # constante proporcional para x e y
@@ -178,19 +174,17 @@ if simulacao == 2:
         rodes[j] = 5
         alfades[j] = 0
         betades[j] = 0
-        qdes[j] = np.array([xdes[j], ydes[j], zdes[j], rof[j], alfaf[j], betaf[j]])
+
     # Derivada das trajetórias de interesse
     for j in range(0, ciclos, 1):
         # xdesponto[j] = -3 * sin(Tc * j)
         # ydesponto[j] = 3 * cos(Tc * j)
-        xdesponto[j] = - 15 * sin(3 * j * Tc)
-        ydesponto[j] = 15 * cos(3 * j * Tc)
+        xdesponto[j] = - 15  * sin(3 * j * Tc)
+        ydesponto[j] = 15  * cos(3 * j * Tc)
         zdesponto[j] = 0
         rodesponto[j] = 0
         alfadesponto[j] = 0
         betadesponto[j] = 0
-        qpontodes[j] = np.array(
-            [xdesponto[j], ydesponto[j], zdesponto[j], rodesponto[j], alfadesponto[j], betadesponto[j]])
 
 ########################################################################################################################
 
@@ -219,6 +213,16 @@ y2[1] = 1
 z2[1] = 0.75
 psi2[1] = 0
 
+# # f(x)
+# # Inputs X
+# # Outputs q(xf,yf,zf,rof,alfaf,betaf)
+xf[1] = x1[1]
+yf[1] = y1[1]
+zf[1] = z1[1]
+rof[1] = sqrt((x2[1] - x1[1]) ** 2 + (y2[1] - y1[1]) ** 2 + (z2[1] - z1[1]) ** 2)
+alfaf[1] = atan((z2[1] - z1[1]) / (sqrt((x2[1] - x1[1]) ** 2 + (y2[1] - y1[1]) ** 2)))
+betaf[1] = atan((y2[1] - y1[1]) / (x2[1] - x1[1]))
+
 # loop de controle
 fig = plt.figure(figsize=(60, 60))
 ax = fig.add_subplot(111, projection='3d')
@@ -227,23 +231,10 @@ ax.view_init(elev=30, azim=-140)
 for k in range(1, ciclos, 1):
     print('k', k)
     ####################################################################################################################
-    # # f(x)
-    # # Inputs X
-    # # Outputs q(xf,yf,zf,rof,alfaf,betaf)
-    xf[k] = x1[k]
-    yf[k] = y1[k]
-    zf[k] = z1[k]
-    rof[k] = sqrt((x2[k] - x1[k]) ** 2 + (y2[k] - y1[k]) ** 2 + (z2[k] - z1[k]) ** 2)
-    alfaf[k] = atan((z2[k] - z1[k]) / (sqrt((x2[k] - x1[k]) ** 2 + (y2[k] - y1[k]) ** 2)))
-    betaf[k] = atan((y2[k] - y1[k]) / (x2[k] - x1[k]))
-
-    q = np.array([xf[k], yf[k], zf[k], rof[k], alfaf[k], betaf[k]])
-
-    ####################################################################################################################
     # Camada de controle
     # Inputs qdes(xdes,ydes,zdes), qpontodes(xpontodes,ypontodes,zpontodes)
     # Outputs qpontoref(xref, yref, zref)
-    # Calculando qtil  qtil[k] = qdes[k] - q[k]
+    # Calculando qtil : qtil[k] = qdes[k] - q[k]
     xtil[k] = (xdes[k] - xf[k])
     ytil[k] = (ydes[k] - yf[k])
     ztil[k] = (zdes[k] - zf[k])
@@ -251,20 +242,30 @@ for k in range(1, ciclos, 1):
     alfatil[k] = (alfades[k] - alfaf[k])
     betatil[k] = (betades[k] - betaf[k])
 
-    qtil = np.array([xtil[k], ytil[k], ztil[k], rotil[k], alfatil[k], betatil[k]]).T
-    #
-    L1 = np.diag([0.5, 0.5, 1, 0.5, 0.5, 0.5])  # Kp
+    qtil = np.array([[xtil[k]],
+                     [ytil[k]],
+                     [ztil[k]],
+                     [rotil[k]],
+                     [alfatil[k]],
+                     [betatil[k]]], dtype='object')
+    print('qtil', qtil)
+    # Parametros para proposta controlador 1
+    L1 = np.diag([0.5, 0.5, 1, 0.5, 0.5, 0.5]) # Kp
     L2 = np.diag([1, 1, 1, 1, 1, 1])  # kd
 
+    # Parametros para proposta controlador 2
     # L1 = np.diag([3, 3, 1.9, 3, 3, 1.9])  # Kp
     # L2 = np.diag([1, 1, 1, 1, 1, 1])  # kd
 
-    # L1 = np.diag([1, 1, 1.9, 1, 1, 1.9])  # Kp
+    # Parametros para proposta controlador 3
+    # L1 = np.diag([0.5, 0.5, 1, 0.5, 0.5, 0.5]) # Kp
+    # print('L1', L1)
     # L2 = np.diag([1, 1, 1, 1, 1, 1])  # kd
+    # print('L2', L2)
 
     parcial1 = np.dot(L2, qtil)
-    # vector = np.vectorize(float)
-    # parcial1 = vector(parcial1)
+    vector = np.vectorize(float)
+    parcial1 = vector(parcial1)
     parcial1[0] = tanh(parcial1[0])
     parcial1[1] = tanh(parcial1[1])
     parcial1[2] = tanh(parcial1[2])
@@ -272,7 +273,16 @@ for k in range(1, ciclos, 1):
     parcial1[4] = tanh(parcial1[4])
     parcial1[5] = tanh(parcial1[5])
 
-    qpontoref[k] = qpontodes[k] + np.dot(L1, parcial1)
+    qpontodes = np.array([[xdesponto[k]],
+                          [ydesponto[k]],
+                          [zdesponto[k]],
+                          [rodesponto[k]],
+                          [alfadesponto[k]],
+                          [betadesponto[k]]])
+
+    print('qpontodes',qpontodes)
+
+    qpontoref = qpontodes + np.dot(L1, parcial1)
 
     ####################################################################################################################
     # J^-1(q)
@@ -283,7 +293,7 @@ for k in range(1, ciclos, 1):
                       [0, 1, 0,                                    0,                                                     0,                                                    0],
                       [0, 0, 1,                                    0,                                                     0,                                                    0],
                       [1, 0, 0, np.dot(cos(alfaf[k]), cos(betaf[k])), np.dot(-rof[k], np.dot(sin(alfaf[k]), cos(betaf[k]))),np.dot(-rof[k], np.dot(cos(alfaf[k]), sin(betaf[k])))],
-                      [0, 1, 0, np.dot(sin(alfaf[k]), cos(betaf[k])), np.dot(rof[k], np.dot(cos(alfaf[k]), cos(betaf[k]))),np.dot(-rof[k], np.dot(sin(alfaf[k]), sin(betaf[k])))],
+                      [0, 1, 0, np.dot(sin(alfaf[k]), cos(betaf[k])), np.dot(-rof[k], np.dot(cos(alfaf[k]), cos(betaf[k]))),np.dot(-rof[k], np.dot(sin(alfaf[k]), sin(betaf[k])))],
                       [0, 0, 1,                        sin(alfaf[k]),                          np.dot(rof[k],cos(alfaf[k])),                                                    0]])
 
     # Jinvq = np.array([[1, 0, 0, 0, 0, 0],
@@ -308,7 +318,9 @@ for k in range(1, ciclos, 1):
     #                    np.dot(-rof[k], np.dot(cos(alfaf[k]), cos(betaf[k])))],
     #                   [0, 0, 1, sin(alfaf[k]), np.dot(rof[k], cos(alfaf[k])), 0]])
 
-    jxqpontoref = np.dot(Jinvq, qpontoref[k])
+    # Jinvq = np.linalg.inv(Jinvq)
+
+    jxqpontoref = np.dot(Jinvq, qpontoref)
 
     xpontoref = np.array([[jxqpontoref[0]],
                           [jxqpontoref[1]],
@@ -339,9 +351,7 @@ for k in range(1, ciclos, 1):
     vxref1[k] = Vref[0]
     vyref1[k] = Vref[1]
     vzref1[k] = Vref[2]
-    # vpsi1[k] = Vref[3]
     vpsiref1[k] = Vref[3]
-
 
     vxref2[k] = Vref[4]
     vyref2[k] = Vref[5]
@@ -360,12 +370,15 @@ for k in range(1, ciclos, 1):
         # outputs x, y, z, psi
 
         # Calcular Xr, Yr e Psir (Ponto de controle) XPONTO
-        mie1 = np.array([vxref1[k], vyref1[k], vzref1[k], vpsiref1[k]])
+        mie1 = np.array([[vxref1[k]],
+                         [vyref1[k]],
+                         [vzref1[k]],
+                         [vpsiref1[k]]])
 
         Ae1 = np.array([[cos(psi1[k]), -sin(psi1[k]), 0, 0],
-                        [sin(psi1[k]), cos(psi1[k]), 0, 0],
-                        [0, 0, 1, 0],
-                        [0, 0, 0, 1]])
+                        [sin(psi1[k]),  cos(psi1[k]), 0, 0],
+                        [           0,             0, 1, 0],
+                        [           0,             0, 0, 1]])
 
         px1 = np.dot(Ae1, mie1)
 
@@ -385,12 +398,15 @@ for k in range(1, ciclos, 1):
         # inputs vxref, vyref, vzref, vpsi
         # outputs x, y, z, psi
         # Calcular Xr, Yr e Psir (Ponto de controle)
-        mie2 = np.array([vxref2[k], vyref2[k], vzref2[k], vpsiref2[k]])
+        mie2 = np.array([[vxref2[k]],
+                         [vyref2[k]],
+                         [vzref2[k]],
+                         [vpsiref2[k]]])
 
-        Ae2 = np.array([[cos(psi1[k]), -sin(psi1[k]), 0, 0],
-                        [sin(psi1[k]), cos(psi1[k]), 0, 0],
-                        [0, 0, 1, 0],
-                        [0, 0, 0, 1]])
+        Ae2 = np.array([[cos(psi2[k]), -sin(psi2[k]), 0, 0],
+                        [sin(psi2[k]),  cos(psi2[k]), 0, 0],
+                        [           0,             0, 1, 0],
+                        [           0,             0, 0, 1]])
 
         px2 = np.dot(Ae2, mie2)
 
@@ -539,13 +555,12 @@ for k in range(1, ciclos, 1):
         # inputs Vxref(vxref1, vyref1, vzref1, vpsi1)
         # outputs x, y, z, psi
 
-        # Drone 1
-        # inputs vxref, vyref1, vzref1, vpsi1
-        # outputs x, y, z, psi
-
         # Calcular Xr, Yr e Psir (Ponto de controle) XPONTO
         #                uvx        uvy        uzponto    upsiponto
-        mie1 = np.array([vxref1[k], vyref1[k], vzref1[k], vpsiref1[k]])
+        mie1 = np.array([[vxref1[k]],
+                         [vyref1[k]],
+                         [vzref1[k]],
+                         [vpsiref1[k]]])
 
         Ae1 = np.array([[cos(psi1[k]), -sin(psi1[k]), 0, 0],
                         [sin(psi1[k]), cos(psi1[k]), 0, 0],
@@ -559,30 +574,14 @@ for k in range(1, ciclos, 1):
         zponto1[k] = px1[2]  # Saida yponto
         psiponto1[k] = px1[3]  # Saida psip
 
-        Xponto1 = np.array([xponto1[k],yponto1[k], zponto1[k],psiponto1[k]])
+        Xponto1 = np.array([[xponto1[k]],
+                            [yponto1[k]],
+                            [zponto1[k]],
+                            [psiponto1[k]]])
 
-        # Calcular Xr, Yr e Psir (Ponto de controle) XPONTO
-        mie1 = np.array([vxref1[k], vyref1[k], vzref1[k], vpsiref1[k]])
-
-        Ae1 = np.array([[cos(psi1[k]), -sin(psi1[k]), 0, 0],
-                        [sin(psi1[k]), cos(psi1[k]), 0, 0],
-                        [0, 0, 1, 0],
-                        [0, 0, 0, 1]])
-
-        px1 = np.dot(Ae1, mie1)
-
+        # Calcular Xdoispontos
         ku1 = np.diag([k1, k3, k5, k7])
         kv1 = np.diag([k2, k4, k6, k8])
-        
-        rf1 = np.array([[k1*cos(psi1[k]), -k3*sin(psi1[k]), 0, 0],
-                        [k1*sin(psi1[k]), k3*cos(psi1[k]), 0, 0],
-                        [0, 0, k5, 0],
-                        [0, 0, 0, k7]])
-
-        rf2 = np.array([[k2*cos(psi1[k]), -k4*sin(psi1[k]), 0, 0],
-                        [k2*sin(psi1[k]), k4*cos(psi1[k]), 0, 0],
-                        [0, 0, k6, 0],
-                        [0, 0, 0, k8]])
 
         U1 = mie1
 
@@ -594,18 +593,11 @@ for k in range(1, ciclos, 1):
         zdoispontos1[k] = Xdoispontos1[2]  # Saida yponto
         psidoispontos1[k] = Xdoispontos1[3]  # Saida psip
 
-        # if k < ciclos - 1:
-        #     x1[k + 1] = Tc * xdoispontos1[k] + x1[k]  # x deve ser x
-        #     y1[k + 1] = Tc * ydoispontos1[k] + y1[k]
-        #     z1[k + 1] = Tc * zponto1[k] + z1[k]
-        #     psi1[k + 1] = Tc * psiponto1[k] + psi1[k]  # Saida p
-
         if k < ciclos - 1:
-            x1[k + 1] = Tc * xponto1[k] + x1[k]  # x deve ser x
-            y1[k + 1] = Tc * yponto1[k] + y1[k]
-            z1[k + 1] = Tc * zponto1[k] + z1[k]
-            psi1[k + 1] = Tc * psiponto1[k] + psi1[k]  # Saida p
-
+            x1[k + 1] = Tc * xdoispontos1[k] + x1[k]  # x deve ser x
+            y1[k + 1] = Tc * ydoispontos1[k] + y1[k]
+            z1[k + 1] = Tc * zdoispontos1[k] + z1[k]
+            psi1[k + 1] = Tc * psidoispontos1[k] + psi1[k]  # Saida p
 
         ####################################################################################################################
         # Drone 2
@@ -618,7 +610,10 @@ for k in range(1, ciclos, 1):
 
         # Calcular Xr, Yr e Psir (Ponto de controle) XPONTO
         #                uvx        uvy        uzponto    upsiponto
-        mie2 = np.array([vxref2[k], vyref2[k], vzref2[k], vpsiref2[k]])
+        mie2 = np.array([[vxref2[k]],
+                         [vyref2[k]],
+                         [vzref2[k]],
+                         [vpsiref2[k]]])
 
         Ae2 = np.array([[cos(psi2[k]), -sin(psi2[k]), 0, 0],
                         [sin(psi2[k]), cos(psi2[k]), 0, 0],
@@ -632,30 +627,14 @@ for k in range(1, ciclos, 1):
         zponto2[k] = px2[2]  # Saida yponto
         psiponto2[k] = px2[3]  # Saida psip
 
-        Xponto2 = np.array([xponto2[k], yponto2[k], zponto2[k], psiponto2[k]])
+        Xponto2 = np.array([[xponto2[k]],
+                            [yponto2[k]],
+                            [zponto2[k]],
+                            [psiponto2[k]]])
 
-        # Calcular Xr, Yr e Psir (Ponto de controle) XPONTO
-        mie2 = np.array([vxref2[k], vyref2[k], vzref2[k], vpsiref2[k]])
-
-        Ae2 = np.array([[cos(psi2[k]), -sin(psi2[k]), 0, 0],
-                        [sin(psi2[k]), cos(psi2[k]), 0, 0],
-                        [0, 0, 1, 0],
-                        [0, 0, 0, 1]])
-
-        px2 = np.dot(Ae2, mie2)
-
+        # Calcular Xdoispontos
         ku = np.diag([k1, k3, k5, k7])
         kv = np.diag([k2, k4, k6, k8])
-
-        rf2 = np.array([[k1 * cos(psi2[k]), -k3 * sin(psi2[k]), 0, 0],
-                        [k1 * sin(psi2[k]), k3 * cos(psi2[k]), 0, 0],
-                        [0, 0, k5, 0],
-                        [0, 0, 0, k7]])
-
-        rf2 = np.array([[k2 * cos(psi2[k]), -k4 * sin(psi2[k]), 0, 0],
-                        [k2 * sin(psi2[k]), k4 * cos(psi2[k]), 0, 0],
-                        [0, 0, k6, 0],
-                        [0, 0, 0, k8]])
 
         U2 = mie2
 
@@ -663,21 +642,29 @@ for k in range(1, ciclos, 1):
 
         xdoispontos2[k] = Xdoispontos2[0]  # Saida xponto
         ydoispontos2[k] = Xdoispontos2[1]  # Saida yponto
-        zdoispontos2[k] = Xponto2[2]  # Saida yponto
-        psidoispontos2[k] = Xponto2[3]  # Saida psip
+        zdoispontos2[k] = Xdoispontos2[2]  # Saida yponto
+        psidoispontos2[k] = Xdoispontos2[3]  # Saida psip
 
-        # if k < ciclos - 1:
-        #     x2[k + 1] = Tc * xdoispontos2[k] + x2[k]  # x deve ser x
-        #     y2[k + 1] = Tc * ydoispontos2[k] + y2[k]
-        #     z2[k + 1] = Tc * zdoispontos2[k] + z2[k]
-        #     psi2[k + 1] = Tc * psidoispontos2[k] + psi2[k]  # Saida p
-        #
         if k < ciclos - 1:
-            x2[k + 1] = Tc * xponto2[k] + x2[k]  # x deve ser x
-            y2[k + 1] = Tc * yponto2[k] + y2[k]
-            z2[k + 1] = Tc * zponto2[k] + z2[k]
-            psi2[k + 1] = Tc * psiponto2[k] + psi2[k]  # Saida p
+            x2[k + 1] = Tc * xdoispontos2[k] + x2[k]  # x deve ser x
+            y2[k + 1] = Tc * ydoispontos2[k] + y2[k]
+            z2[k + 1] = Tc * zdoispontos2[k] + z2[k]
+            psi2[k + 1] = Tc * psidoispontos2[k] + psi2[k]  # Saida p
     ####################################################################################################################
+
+    ####################################################################################################################
+    # # f(x)
+    # # Inputs X
+    # # Outputs q(xf,yf,zf,rof,alfaf,betaf)
+    if k < ciclos-1:
+        xf[k + 1] = x1[k]
+        yf[k + 1] = y1[k]
+        zf[k + 1] = z1[k]
+        rof[k + 1] = sqrt((x2[k] - x1[k]) ** 2 + (y2[k] - y1[k]) ** 2 + (z2[k] - z1[k]) ** 2)
+        alfaf[k + 1] = atan((z2[k] - z1[k]) / (sqrt((x2[k] - x1[k]) ** 2 + (y2[k] - y1[k]) ** 2)))
+        betaf[k + 1] = atan((y2[k] - y1[k]) / (x2[k] - x1[k]))
+        q = np.array([xf[k+1], yf[k+1], zf[k+1], rof[k+1], alfaf[k-1], betaf[k-1]])
+
     # Preparação dos dados para plotar
     erro[k] = sqrt((xtil[k]) ** 2 + (ytil[k]) ** 2 + (ztil[k]) ** 2)
     plt.axis('auto')
